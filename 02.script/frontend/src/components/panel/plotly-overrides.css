@@ -1,0 +1,30 @@
+/* Plotly chrome flattening (교차검토 보강).
+   Plotly's HTML modebar and hover chrome ship with rounded corners + drop shadows
+   that clash with the flat/angular system (2px radius, hairline, NO shadow). We
+   override the DOM bits here. The hoverlabel itself is SVG — its bg/border/font
+   are set via the `hoverlabel` layout config (see plotly.js). These rules are
+   scoped under .js-plotly-plot so they never leak to non-Plotly UI. */
+
+/* Modebar (HTML) — flatten radius + kill shadow. (config displayModeBar:false on
+   our charts means it's usually absent, but if a future chart enables it the
+   chrome still matches the system.) */
+.js-plotly-plot .modebar {
+  box-shadow: none !important;
+  border-radius: var(--r, 2px) !important;
+}
+.js-plotly-plot .modebar-group {
+  box-shadow: none !important;
+  border-radius: var(--r, 2px) !important;
+}
+.js-plotly-plot .modebar-btn {
+  box-shadow: none !important;
+  border-radius: var(--r, 2px) !important;
+}
+
+/* Hover chrome that Plotly renders as HTML (e.g. the unified hover container and
+   spikeline labels in some modes). The SVG hovertext path picks up bg/border from
+   the `hoverlabel` config; this just guarantees no stray rounding/shadow. */
+.js-plotly-plot .hoverlayer .legend,
+.js-plotly-plot .hovertext {
+  box-shadow: none !important;
+}

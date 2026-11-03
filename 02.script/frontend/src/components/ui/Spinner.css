@@ -1,0 +1,26 @@
+/* Spinner.css — keyframes for the one sanctioned green loading affordance.
+   A thin rotating arc (flat/angular: no shadow, square-ish ring). The visible
+   sweep is the green top border; the remaining sides are a faint hairline track
+   so the ring reads as a partial arc spinning. */
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  border-style: solid;
+  border-color: var(--hairline);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+/* Respect reduced-motion: keep the arc visible but stop spinning. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <!-- LOAD-BEARING, FIRST in <head>: strip the Referer from ALL page requests.
+         Kakao's JS key is domain-restricted and 401s ("domain mismatched") on an
+         HTTP origin, but serves fine when NO Referer is sent. Our only requests are
+         same-origin (/api + /healthz proxy — don't need a Referer) and Kakao
+         (needs NO Referer), so a blanket no-referrer is safe and required here. -->
+    <meta name="referrer" content="no-referrer" />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>서울 생활인구 대시보드</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+/* HourRange.css — single-track dual-thumb range slider (0–23) for the 시간대 control.
+   Two native <input type=range> are absolutely overlaid on ONE track. The inputs
+   themselves are pointer-events:none (so clicks fall through to whichever thumb is
+   nearest), while each ::thumb re-enables pointer-events so BOTH thumbs stay
+   draggable. Design system: angular ink thumbs on a hairline track, ink fill for
+   the selected span, green ONLY on :focus-visible (the sanctioned input focus
+   signal — never for fill or resting thumb). No box-shadow.
+   Pseudo-element thumb styling can't be done with inline styles, hence this file. */
+
+.hour-range {
+  position: relative;
+  width: 100%;
+  height: 44px; /* touch target */
+}
+
+/* Empty track + selected fill share this geometry: a thin centered bar. */
+.hour-range__track,
+.hour-range__fill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  border-radius: var(--r);
+  pointer-events: none;
+}
+
+.hour-range__track {
+  left: 0;
+  right: 0;
+  background: var(--hairline);
+}
+
+/* Selected span — INK (active/selected UI), NOT green. left/right set inline. */
+.hour-range__fill {
+  background: var(--ink);
+}
+
+/* Both range inputs are layered on top of the track, full width, transparent so the
+   shared track/fill divs show through. pointer-events:none on the input lets the
+   nearest thumb win the hit-test; the thumb pseudo re-enables pointer-events. */
+.hour-range__input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+}
+
+.hour-range__input:focus {
+  outline: none;
+}
+
+/* The native track is invisible — our own divs render the bar. */
+.hour-range__input::-webkit-slider-runnable-track {
+  background: transparent;
+  border: none;
+  height: 44px;
+}
+.hour-range__input::-moz-range-track {
+  background: transparent;
+  border: none;
+  height: 4px;
+}
+
+/* ── Thumb: ~18px angular square, canvas fill, 2px ink border, 2px radius ─────── */
+.hour-range__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto; /* re-enable: thumb stays grabbable */
+  width: 18px;
+  height: 18px;
+  margin-top: 13px; /* center the 18px thumb on the 44px input (track at 22px) */
+  border-radius: var(--r);
+  background: var(--canvas);
+  border: 2px solid var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+}
+.hour-range__input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r);
+  background: var(--canvas);
+  border: 2px solid var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* ── Focus: green border ONLY on keyboard focus (design-sanctioned focus signal) ── */
+.hour-range__input:focus-visible::-webkit-slider-thumb {
+  border-color: var(--green);
+}
+.hour-range__input:focus-visible::-moz-range-thumb {
+  border-color: var(--green);
+}

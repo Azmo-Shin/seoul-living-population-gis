@@ -1,0 +1,512 @@
+/* App shell layout — full-viewport flex column: three chrome bars stacked on top of a
+   three-column body row. Separation is hairline borders only (no shadows, design rule).
+   Bars themselves carry their own backgrounds; this file owns the layout skeleton.
+
+   Task 9 (responsive): the desktop (≥1024) layout is the original 3-column inline
+   row (rail | map | panel). Below 1024 the body switches to a column (map on top,
+   KPI panel stacked below) and the filter rail becomes a LEFT OVERLAY DRAWER toggled
+   by the "필터" button in the breadcrumb bar. The drawer is position:fixed so opening
+   it never reflows the map/panel (no needless deck.gl/Plotly container resizes).
+   Breakpoints follow nvidia_frontend_DESIGN.md: 1280 / 1024 / 768 / 480. */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--canvas);
+}
+
+/* Shared horizontal layout for the three chrome bars. Per-bar height, flex sizing,
+   background, and color stay inline (token-based) on each bar's element. */
+.chrome-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-lg);
+}
+
+/* The body row sits below the three chrome bars and fills remaining height. */
+.shell-body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  background: var(--canvas);
+  position: relative; /* positioning context for the overlay drawer + backdrop (<1024) */
+}
+
+/* --- Body columns --- */
+.shell-rail {
+  flex: 0 0 320px;
+  border-right: 1px solid var(--hairline);
+  overflow: auto;
+  background: var(--canvas);
+}
+
+.shell-map {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: auto;
+}
+
+.shell-kpi {
+  /* width is user-resizable via the .shell-resize handle (──> --panel-w on .shell-body);
+     falls back to 360px. The map (flex:1) absorbs the change; charts reflow (ResizeObserver). */
+  flex: 0 0 var(--panel-w, 360px);
+  border-left: 1px solid var(--hairline);
+  overflow: auto;
+}
+
+/* --- Panel resize handle (≥1024) --- a thin full-height strip on the panel's LEFT edge;
+   drag it to widen/narrow the panel (the map shrinks/grows). Separate from the collapse
+   toggle (which sits on top at center). Hidden when collapsed or in the stacked layout. */
+.shell-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--panel-w, 360px);
+  width: 8px;
+  transform: translateX(50%); /* straddle the border so the whole edge is grabbable */
+  z-index: 9;
+  cursor: col-resize;
+  background: transparent;
+  touch-action: none;
+}
+.shell-resize:hover,
+.shell-resize.is-dragging {
+  background: var(--hairline);
+}
+.shell-body.panel-collapsed .shell-resize {
+  display: none;
+}
+
+/* --- Right panel collapse (≥1024) --- When .shell-body has .panel-collapsed, the KPI
+   panel is removed from the flow (display:none) and the map (already flex:1) grows to
+   fill the freed width. display:none only drops the box from layout — the React element
+   stays mounted, so re-expanding is instant with no remount churn for the map/store.
+   The boundary toggle stays pinned to the map edge so it's always reachable. */
+.shell-body.panel-collapsed .shell-kpi {
+  display: none;
+}
+
+/* The collapse/expand toggle — a thin handle pinned at the map↔panel boundary (right
+   edge of the map), vertically centered. Ink/hairline on transparent fill (NO green,
+   chrome stays green-free per the budget), 2px radius, no shadow. ≥44px touch target. */
+.shell-panel-toggle {
+  appearance: none;
+  position: absolute;
+  top: 50%;
+  /* Sits just inside the panel's left border so it reads as a boundary handle. Tracks
+     the (resizable) panel width via --panel-w; falls back to 360px. */
+  right: var(--panel-w, 360px);
+  transform: translateY(-50%);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; /* slim handle */
+  min-height: 44px; /* WCAG AA ≥44px touch target */
+  padding: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.shell-panel-toggle:hover {
+  border-color: var(--hairline-strong);
+}
+
+/* When collapsed (≥1024) the panel is gone, so pin the toggle to the map's right edge. */
+.shell-body.panel-collapsed .shell-panel-toggle {
+  right: 0;
+}
+
+/* --- Drawer-only chrome (the rail's own header + close button + backdrop). These are
+   inert/hidden on the desktop inline layout and only light up <1024 (see media query).
+   Declared here so the elements always exist in the DOM (JS just toggles .is-open). --- */
+.shell-rail__drawer-head {
+  display: none; /* shown only when the rail is a drawer (<1024) */
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-md) var(--sp-lg);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.shell-rail__close {
+  /* 44px touch target, 2px radius, ink text, transparent fill, hairline edge. */
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--sp-sm);
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r);
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+.shell-backdrop {
+  display: none; /* only when the drawer is open on a narrow screen */
+}
+
+/* The breadcrumb-bar filter toggle: hidden on desktop (rail is inline ≥1024). It only
+   becomes visible inside the <1024 media query. 44px touch target, 2px radius, ink
+   text on transparent fill (NO green — chrome stays green-free per the budget). */
+.bc-filter-toggle {
+  display: none;
+  appearance: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px; /* WCAG AA ≥44px touch target; centers in the 48px breadcrumb bar */
+  min-width: 44px; /* ≥44 wide hit target (padding alone could fall short for a short label) */
+  padding: var(--sp-xs) var(--sp-md);
+  margin-right: var(--sp-sm);
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r);
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+}
+
+/* Placeholder label inside each empty column. Centered, muted — clearly provisional. */
+.shell-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mute);
+  padding: var(--sp-lg);
+  text-align: center;
+}
+
+/* ============================================================================
+   TOP BAR (merged dark row) — the old UtilityBar + PrimaryNav collapsed into one
+   flat dark bar. LEFT = wordmark + title; RIGHT = ModeTabs + data-period. Flat,
+   radius 0, on-dark text (set inline on the element). The right cluster wraps /
+   the period hides on very narrow widths so the ModeTabs stay usable.
+   ============================================================================ */
+.top-bar__brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-md);
+  min-width: 0; /* lets the title ellipsize before crowding the right cluster */
+}
+.top-bar__title {
+  color: var(--on-dark);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.top-bar__util {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+  flex-shrink: 0;
+}
+.top-bar__period {
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   BREADCRUMB ROW actions — the 비교 모드 + 격자 toggles right-aligned in the soft
+   breadcrumb bar. Layout/spacing here; the chips own their ink/hairline styling.
+   ============================================================================ */
+.bc-trail {
+  overflow: hidden; /* long trails ellipsize/clip rather than push the actions out */
+}
+
+/* ============================================================================
+   FILTER RAIL compaction (HIGH-DENSITY) — aggressively dense vertical rhythm so the
+   core filters (기간 / 지역 / 성별·연령 / 시간대 / 요일) fit at a typical desktop
+   height WITHOUT scrolling — and in 비교 모드, the A set + the "B · 비교 대상" set BOTH
+   fit (or near-fit) so they can be compared at a glance. Control heights drop to
+   ~28–30px (a touch below the 44px touch target — acceptable for this dense DESKTOP
+   filter panel per the user's explicit compactness request; controls stay clearly
+   clickable and readable). Scoped to .filter-rail so nothing outside the rail (e.g.
+   the TopBar ModeTabs, the breadcrumb chips, map, panel) shrinks. !important is needed
+   only because the control primitives set heights/min-heights via inline styles. No
+   control wiring/behavior is touched — only size + layout density.
+   ============================================================================ */
+.filter-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm); /* 8px between groups (was 12px) */
+  padding: var(--sp-sm) var(--sp-md);
+}
+
+/* FieldGroup label→control gap tightened to the minimum (2px). */
+.filter-rail .field-group {
+  gap: var(--sp-xxs) !important;
+}
+
+/* Smaller, tighter group labels: drop the big uppercase .t-caption (14px) to a
+   compact 11px label so each label costs less vertical space. */
+.filter-rail .field-group__label {
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+/* Inline field groups: label LEFT, control RIGHT on one row (성별 / 요일 / 시간대).
+   The label gets a fixed min width so the controls line up across inline rows. */
+.filter-rail .field-group--inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+.filter-rail .field-group--inline .field-group__label {
+  flex: 0 0 auto;
+  min-width: 40px;
+}
+.filter-rail .field-group--inline .field-group__control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Dividers: drop them to near-hairline-only — a thin symmetric margin so a divider
+   reads as a separator without adding a full gap on each side. */
+.filter-rail .rail-divider {
+  margin: var(--sp-xxs) 0 !important;
+}
+
+/* Dense control heights: native select/inputs + buttons (PillTab, Badge, presets,
+   chips) drop to ~28–30px. */
+.filter-rail select,
+.filter-rail input[type='month'],
+.filter-rail input[type='date'] {
+  min-height: 30px !important;
+}
+.filter-rail button {
+  min-height: 28px !important;
+}
+
+/* Pills (PillTab .t-button-sm) get compact horizontal padding so 전체/남/여 and
+   전체/주중/주말 stay short on their inline rows. */
+.filter-rail .t-button-sm {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+/* HourRange: shorter track + smaller thumb, proportional to the denser controls. */
+.filter-rail .hour-range,
+.filter-rail .hour-range__input {
+  height: 28px !important;
+}
+.filter-rail .hour-range__input::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: 7px; /* center the 14px thumb on the 28px input */
+}
+.filter-rail .hour-range__input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+}
+/* The preset chips are intrinsically short — don't let the generic 28px button floor
+   inflate them on their shared row with the span text. */
+.filter-rail .hour-range__preset {
+  min-height: 22px !important;
+}
+
+/* The "B · 비교 대상" box: tighter inner gap so B's stacked filters stay dense. */
+.filter-rail .rail-compare-b {
+  gap: var(--sp-xs) !important;
+}
+
+/* ============================================================================
+   RESPONSIVE — canonical breakpoint set (per nvidia_frontend_DESIGN.md):
+     1280px  desktop → desktop-small : narrow rail/panel, map keeps width
+     1024px  the big one  : rail → overlay drawer, body row → column (map / panel)
+      768px  tablet → mobile  : single-column paddings, wordmark ellipsis, shorter map
+      480px  mobile  : near-full-width drawer, tightest paddings, shortest map
+   CSS media queries can't read custom properties, so these literals are duplicated
+   below — keep any new breakpoint on THIS set so the layout stays consistent. Edges
+   use max-width: N-1 (e.g. 1023/767/479) to avoid overlap with the min-width side.
+   ============================================================================ */
+
+/* ============================================================================
+   1024–1280 (desktop-small → desktop): keep the 3-column inline layout but slightly
+   narrow the rail/panel so the map keeps usable width on smaller desktops.
+   ============================================================================ */
+@media (max-width: 1280px) and (min-width: 1024px) {
+  .shell-rail {
+    flex-basis: 280px;
+  }
+  /* (Panel width is now user-resizable via --panel-w on .shell-body — App seeds a
+     narrower default on small desktops — so no fixed flex-basis/toggle override here.) */
+}
+
+/* ============================================================================
+   <1024 (desktop-small / tablet): collapse the filter rail into a LEFT OVERLAY
+   DRAWER and stack the KPI panel BELOW the map. The body switches row → column.
+   ============================================================================ */
+@media (max-width: 1023px) {
+  /* Body becomes a vertical stack: map on top, KPI panel below (scrolls in page). */
+  .shell-body {
+    flex-direction: column;
+    overflow: auto; /* the page scrolls; map has fixed height, panel flows below */
+  }
+
+  /* Map gets a usable fixed height at the top of the stack (full width). */
+  .shell-map {
+    flex: 0 0 auto;
+    height: min(55vh, 520px);
+    overflow: hidden; /* deck.gl canvas fills this box; no inner scroll */
+  }
+
+  /* No horizontal panel resize in the stacked layout — hide the resize handle. */
+  .shell-resize {
+    display: none;
+  }
+
+  /* KPI panel stacks BELOW the map, full width, auto height, flows in the page. */
+  .shell-kpi {
+    flex: 0 0 auto;
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--hairline); /* hairline separator, now horizontal */
+    overflow: visible;
+  }
+
+  /* Rail → fixed overlay drawer sliding in from the left. Hidden by default
+     (translated off-screen); .is-open slides it in. position:fixed so toggling it
+     does NOT reflow the map/panel underneath (no container-resize churn). */
+  .shell-rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 30;
+    width: 320px;
+    max-width: 85vw;
+    flex: none;
+    border-right: 1px solid var(--hairline);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    /* Drawer overlays everything incl. the chrome bars, so it gets its own surface. */
+    background: var(--canvas);
+  }
+  .shell-rail.is-open {
+    transform: translateX(0);
+  }
+
+  /* Drawer header (title + close) shows only in drawer mode. */
+  .shell-rail__drawer-head {
+    display: flex;
+  }
+
+  /* Translucent backdrop behind the open drawer; click to close. Covers the viewport.
+     Hidden (no pointer events) until .is-open. */
+  .shell-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+  .shell-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* Reveal the breadcrumb-bar filter toggle (the only entry point to the drawer). */
+  .bc-filter-toggle {
+    display: inline-flex;
+  }
+
+  /* Panel-collapse in the stacked (column) layout. The toggle becomes a full-width
+     horizontal handle sitting at the map↔panel boundary; collapsing hides the bottom
+     panel and lets the map grow to fill the freed vertical space. */
+  .shell-panel-toggle {
+    position: static; /* flows between map and panel in the column */
+    top: auto;
+    right: auto;
+    transform: none;
+    width: 100%;
+    min-height: 32px; /* slim horizontal handle (tap area still ≥32, full-width wide) */
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--hairline);
+    /* The chevron points down/up via rotation so a horizontal bar reads correctly. */
+  }
+  .shell-panel-toggle > span {
+    display: inline-block;
+    transform: rotate(90deg); /* › → ⌄ (collapse downward) when open */
+  }
+  .shell-body.panel-collapsed .shell-panel-toggle {
+    right: auto; /* override the ≥1024 collapsed pin; static flow here */
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  /* When collapsed in the column layout, the map takes all remaining height (the panel
+     is display:none) and the page no longer needs to scroll for the panel. */
+  .shell-body.panel-collapsed {
+    overflow: hidden;
+  }
+  .shell-body.panel-collapsed .shell-map {
+    flex: 1 1 auto;
+    height: auto;
+  }
+}
+
+/* ============================================================================
+   <768 (tablet → mobile): single-column; reduce paddings; map a touch shorter.
+   Section spacing 64→48 per the design doc's collapsing strategy.
+   ============================================================================ */
+@media (max-width: 767px) {
+  .chrome-bar {
+    padding: 0 var(--sp-md);
+  }
+  .shell-map {
+    height: min(50vh, 440px);
+  }
+  /* Keep the merged TopBar's wordmark + ModeTabs on one line without overflow: let the
+     wordmark shrink/ellipsize before the 일/주/월 pills (kept fully tappable). Targets
+     .nav-wordmark (a stable class on the wordmark span) so reordering can't break it. */
+  .nav-wordmark {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Drop the redundant dashboard title (the wordmark still identifies the app) and the
+     data-period text so the merged bar's right cluster never crowds the ModeTabs. */
+  .top-bar__title,
+  .top-bar__period {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   <480 (mobile): the drawer goes near-full-width; tighter paddings; shorter map.
+   Section spacing → 32 per the design doc.
+   ============================================================================ */
+@media (max-width: 479px) {
+  .chrome-bar {
+    padding: 0 var(--sp-sm);
+  }
+  .shell-rail {
+    width: 100%;
+    max-width: 100vw;
+  }
+  .shell-map {
+    height: 45vh;
+  }
+}

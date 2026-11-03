@@ -1,0 +1,55 @@
+/* base.css — minimal reset + NVIDIA-style typography utility classes.
+   Depends on tokens.css (imported first in main.jsx). */
+
+/* ---- Map label font (NanumSquare) ----
+   ONLY the deck.gl map name labels (구명/행정동명/A-2 동 underlay) use this Korean
+   face — the rest of the app keeps Inter (the design system). deck.gl's TextLayer
+   rasterizes glyphs into an SDF atlas using the BROWSER's font rendering at
+   atlas-build time, so the face MUST be registered (here) AND loaded
+   (document.fonts.load in MapView) BEFORE the atlas builds, else deck silently
+   falls back to a thin default. Bold(700) is the primary weight; ExtraBold(800)
+   is registered too in case more heft is wanted. Served from /public/fonts/. */
+@font-face {
+  font-family: 'NanumSquare';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/NanumSquareB.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NanumSquare';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/NanumSquareEB.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* ---- Minimal reset ---- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--body);
+  background: var(--canvas);
+}
+
+/* ---- Typography utility tiers ----
+   font-family is inherited from body (var(--font)) on all of these.
+   Two intentional exceptions are marked inline. */
+.t-display-xl { font-weight: 700; font-size: 48px; line-height: 1.25; }
+.t-display-lg { font-weight: 700; font-size: 36px; line-height: 1.25; }
+.t-heading-xl { font-weight: 700; font-size: 24px; line-height: 1.25; }
+.t-heading-lg { font-weight: 400; font-size: 22px; line-height: 1.75; } /* EXCEPTION: weight 400 (not 700) */
+.t-heading-md { font-weight: 700; font-size: 20px; line-height: 1.25; }
+.t-heading-sm { font-weight: 700; font-size: 18px; line-height: 1.4; }
+.t-card-title { font-weight: 700; font-size: 17px; line-height: 1.47; }
+.t-body { font-weight: 400; font-size: 16px; line-height: 1.5; }
+.t-body-strong { font-weight: 700; font-size: 16px; line-height: 1.5; }
+.t-body-sm { font-weight: 400; font-size: 15px; line-height: 1.67; }
+.t-button-sm { font-weight: 700; font-size: 14.4px; line-height: 1; letter-spacing: 0.144px; } /* EXCEPTION: only place with letter-spacing */
+.t-caption { font-weight: 700; font-size: 14px; line-height: 1.43; text-transform: uppercase; }
+.t-caption-sm { font-weight: 400; font-size: 12px; line-height: 1.25; }
+.t-utility-xs { font-weight: 700; font-size: 10px; line-height: 1.5; text-transform: uppercase; }

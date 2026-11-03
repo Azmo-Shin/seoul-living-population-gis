@@ -1,0 +1,83 @@
+/* MapView.css — layout for the Kakao basemap + deck.gl overlay. The Kakao map
+   renders its tiles into an absolutely-positioned host div; the deck.gl choropleth
+   draws on a transparent canvas STACKED ABOVE it (pointer-events:none so Kakao
+   still receives pan/zoom gestures). Picking is done via native listeners on
+   .mapview, so the click-through canvas never blocks interaction. Scoped under
+   .mapview. Design rule: 2px radius, 1px hairline border, NO shadows. */
+
+.mapview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* The Kakao host + deck canvas are absolutely positioned inside; this is the
+     positioning + sizing context they fill. overflow hidden clips them to the
+     column. */
+  overflow: hidden;
+  background: var(--surface-soft);
+}
+
+/* Kakao basemap host — fills the container (the tiles render here). It owns the
+   pan/zoom gestures. z-index 0 keeps it at the bottom of the .mapview stack. */
+.mapview__kakao {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* deck.gl overlay canvas — the choropleth, drawn ABOVE the Kakao tiles. Transparent
+   (no-data cells let the basemap through). pointer-events:none so Kakao receives the
+   drag/zoom; hover/click picking is handled by native listeners on .mapview. */
+.mapview__deck {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---- Always-mounted loading/error overlay (Task 8) ----
+   Permanently in the DOM (so the map keeps its measured size — the viewport-fit
+   logic must never see an unsized container). Toggled purely via opacity +
+   pointer-events. Idle → fully transparent + click-through; active → a light veil
+   dimming the choropleth slightly with a centered Spinner/error panel. */
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* above Legend(2)/Tooltip(3) so the veil covers them while busy */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Subtle translucent veil; the choropleth stays visible (dimmed) underneath. */
+  background: rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none; /* idle: never intercept map pan/zoom/hover */
+  transition: opacity 0.15s ease;
+}
+
+.map-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  /* The veil itself swallows clicks while busy (the map shouldn't be driven
+     mid-fetch); the box inside is non-interactive content. */
+  pointer-events: auto;
+}
+
+/* The centered loading/error panel: flat canvas card, 1px hairline, 2px radius, no
+   shadow — matches Legend/Tooltip chrome. */
+.map-overlay__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-sm);
+  max-width: 320px;
+  padding: var(--sp-md) var(--sp-lg);
+  text-align: center;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r);
+  box-shadow: none;
+}

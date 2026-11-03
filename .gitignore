@@ -1,0 +1,45 @@
+# ── 비밀/환경 (절대 커밋 금지) ──
+.env
+*.env
+!.env.example
+*.key
+*.pem
+gcp_*.json
+*_svc_key*.json
+
+# ── 대용량 원천 생활인구 CSV (~50GB) ── (shp 등 작은 원천 레이어는 추적)
+01.data/01.raw_data/서울_250M_생활인구/
+01.data/02.pre_data/
+01.data/03.res_data/
+01.data/04.model/
+
+# ── 빌드 산출물·대용량 결과·그래프 ──
+03.result/
+graphify-out/
+*.zip
+
+# ── 파이썬 ──
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# ── 노드/프론트 빌드 ──
+node_modules/
+dist/
+.vite/
+*.local
+
+# ── 캐시/임시/로그 ──
+cache/
+.playwright-mcp/
+/*.png
+*.log
+nul
+tmpclaude-*
+
+# ── 에디터/OS ──
+.claude/settings.local.json
+.DS_Store
+Thumbs.db

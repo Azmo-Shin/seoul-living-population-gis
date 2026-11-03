@@ -1,0 +1,13 @@
+:root{
+  --green:#76b900; --green-dark:#5a8d00; --green-pale:#bff230; --on-primary:#000;
+  --ink:#000; --body:#1a1a1a; --canvas:#fff; --surface-dark:#000;
+  --surface-soft:#f7f7f7; --surface-elevated:#1a1a1a;
+  --hairline:#ccc; --hairline-strong:#5e5e5e;
+  --mute:#757575; --stone:#898989; --ash:#a7a7a7;
+  --on-dark:#fff; --on-dark-mute:rgba(255,255,255,.7);
+  /* --link (#0046a4) is for inline prose links ONLY — never on chrome/buttons */
+  --link:#0046a4; --error:#e52020; --warning:#df6500; --success:#3f8500;
+  --r:2px; --r-none:0;
+  --sp-xxs:2px; --sp-xs:4px; --sp-sm:8px; --sp-md:12px; --sp-lg:16px; --sp-xl:24px; --sp-xxl:32px; --sp-section:64px;
+  --font:'Inter',Arial,Helvetica,sans-serif;
+}
