@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/header.svg" alt="seoul-living-population-gis" width="100%"></p>
+
 # seoul-living-population-gis
 
 서울시 **250m 격자 생활인구**(공공데이터)를 월·시간·주중주말 단위로 집계해 구 → 행정동 → 격자로 드릴다운하는 **GIS 대시보드**입니다.
